@@ -1,12 +1,57 @@
-from sys import stdlib_module_names
+from doctest import script_from_examples
+from math import acosh
 from tkinter import *
+import random as r
 
 # Константы
 WIDTH = 800
 HEIGHT = 600
 SEGMENT_SIZE = 20
 IN_GAME = True
+SCORES = 0
 
+# Игровые фукнции
+def create_apple():
+    global Apple
+
+    posx = SEGMENT_SIZE * r.randint(1, int((WIDTH -SEGMENT_SIZE) / SEGMENT_SIZE))
+    posy = SEGMENT_SIZE * r.randint(1, int((HEIGHT -SEGMENT_SIZE) / SEGMENT_SIZE))
+
+    Apple = c.create_oval(posx, posy,
+                          posx + SEGMENT_SIZE, posy + SEGMENT_SIZE,
+                          fill='red')
+
+def main():
+    global IN_GAME, SCORES
+    if IN_GAME == True:
+        s.move()
+        head_coods = c.coords(s.segments[-1].instance)
+        x1, y1, x2, y2 = head_coods
+        speed = 100
+        if x2 > WIDTH or x1 < 0 or y1 < 0 or y2 > HEIGHT:
+            IN_GAME = False
+        elif head_coods == c.coords(Apple):
+            SCORES += 1
+            scores_label['text'] = SCORES
+            if SCORES < 10:
+                scores_label['bg'] = "#FF0000"
+            elif SCORES >= 10 and SCORES < 20:
+                scores_label['bg'] = "#FF00FF"
+            else:
+                scores_label['bg'] = "#00FF00"
+            s.add_segment()
+            c.delete(Apple)
+            create_apple()
+        else:
+            for i in range(len(s.segments) - 1):
+                if head_coods == c.coords(s.segments[i].instance):
+                    IN_GAME = False
+        root.after(int(speed), main)
+    else:
+        c.create_text(WIDTH/2, HEIGHT/2,
+                      text='Игра окончена',
+                      font=("Arial", 25),
+                      fill='red')
 
 # Классы описания
 class Segment(object):
@@ -59,6 +104,9 @@ root = Tk()
 c = Canvas(root, width=WIDTH, height=HEIGHT, bg="#003300")
 c.grid()
 
+scores_label = Label(root, text="0")
+scores_label.grid()
+
 segments = [
     Segment(SEGMENT_SIZE, SEGMENT_SIZE),
     Segment(SEGMENT_SIZE*2, SEGMENT_SIZE),
@@ -66,6 +114,10 @@ segments = [
 ]
 
 s = Snake(segments)
+
+c.bind("<KeyPress>", s.change_direction)
+create_apple()
+main()
 
 c.focus_set()
 
